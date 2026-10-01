@@ -1,0 +1,54 @@
+name: Build Warex Mod
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download and Setup Android NDK
+        run: |
+          echo "Завантаження NDK..."
+          wget -q https://dl.google.com/android/repository/android-ndk-r26b-linux.zip
+          echo "Розпакування NDK..."
+          unzip -q android-ndk-r26b-linux.zip
+          echo "NDK готовий!"
+
+      - name: Extract Project Zip
+        run: |
+          unzip -q hack.zip -d extracted_project
+          ls -la extracted_project
+
+      - name: Compile Library
+        run: |
+          PROJECT_DIR=$(find extracted_project -type d -name "ImGui" -exec dirname {} \;)
+          echo "Проєкт знайдено в: $PROJECT_DIR"
+          
+          # Шлях до скачаного NDK clang++
+          NDK_PATH=$PWD/android-ndk-r26b
+          
+          $NDK_PATH/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang++ \
+            -shared -fPIC -std=c++17 \
+            "$PROJECT_DIR/Main.cpp" \
+            "$PROJECT_DIR/ImGui/imgui.cpp" \
+            "$PROJECT_DIR/ImGui/imgui_draw.cpp" \
+            "$PROJECT_DIR/ImGui/imgui_tables.cpp" \
+            "$PROJECT_DIR/ImGui/imgui_widgets.cpp" \
+            "$PROJECT_DIR/ImGui/backends/imgui_impl_android.cpp" \
+            "$PROJECT_DIR/ImGui/backends/imgui_impl_opengl3.cpp" \
+            -I"$PROJECT_DIR" \
+            -I"$PROJECT_DIR/ImGroup" \
+            -I"$PROJECT_DIR/ImGui" \
+            -I"$PROJECT_DIR/Includes" \
+            -L"$PROJECT_DIR/libraries/arm64-v8a" -ldobby \
+            -llog -lGLESv2 -lEGL \
+            -o libwirex.so
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wirex-library
+          path: libwirex.so
