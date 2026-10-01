@@ -39,20 +39,24 @@ jobs:
 
           NDK_PATH=$PWD/android-ndk-r26b
           
-          # Збираємо абсолютно всі .cpp файли з усього проєкту
+          # Збираємо всі .cpp файли з усього проєкту
           CPP_FILES=$(find "$extracted_project" -name "*.cpp")
           echo "Знайдені файли для компіляції:"
           echo "$CPP_FILES"
 
+          # Збираємо всі підпапки для включення заголовків (-I)
+          INCLUDE_DIRS=$(find "$extracted_project" -type d)
+
+          # Перетворюємо список папок у формат аргументів -I
+          INCLUDE_FLAGS=""
+          for dir in $INCLUDE_DIRS; do
+            INCLUDE_FLAGS="$INCLUDE_FLAGS -I$dir"
+          done
+
           $NDK_PATH/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang++ \
             -shared -fPIC -std=c++17 \
             $CPP_FILES \
-            -I"$PROJECT_DIR" \
-            -I"$PROJECT_DIR/ImGui" \
-            -I"$PROJECT_DIR/IMGUI" \
-            -I"$PROJECT_DIR/Includes" \
-            -I"$PROJECT_DIR/includes" \
-            -I"$(dirname $(find "$extracted_project" -name "login.cpp" | head -n 1))" \
+            $INCLUDE_FLAGS \
             -L"$PROJECT_DIR/libraries/arm64-v8a" -ldobby \
             -llog -lGLESv2 -lEGL \
             -o libwaterhack.so
