@@ -25,23 +25,15 @@ jobs:
         run: |
           NDK_PATH=$PWD/android-ndk-r26b
           
-          # Переходимо всередину розпакованого проєкту для зручності
+          # Переходимо всередину розпакованого проєкту
           cd extracted_project
 
-          # Створюємо символьні посилання для вирішення проблем з регістром папок (великі/маленькі літери)
+          # Створюємо символьні посилання для вирішення проблем з регістром папок
           for dir in */; do
+            [ -d "$dir" ] || continue
             dir_name=$(basename "$dir")
-            # Створюємо дублікати з усіма варіантами регістру
-            ln -sfn "$dir_name" "$(echo "$dir_name" | tr '[:upper:]' '[:lower:]')"
-            ln -sfn "$dir_name" "$(echo "$dir_name" | tr '[:lower:]' '[:upper:]')"
-          }
-          
-          # Також робимо те ж саме для вкладених папок (наприклад, Dobby всередині includes)
-          find . -type d | while read -r subdirs; do
-            sub_name=$(basename "$subdirs")
-            parent_dir=$(dirname "$subdirs")
-            ln -sfn "$sub_name" "$parent_dir/$(echo "$sub_name" | tr '[:upper:]' '[:lower:]')" 2>/dev/null || true
-            ln -sfn "$sub_name" "$parent_dir/$(echo "$sub_name" | tr '[:lower:]' '[:upper:]')" 2>/dev/null || true
+            ln -sfn "$dir_name" "$(echo "$dir_name" | tr '[:upper:]' '[:lower:]')" 2>/dev/null || true
+            ln -sfn "$dir_name" "$(echo "$dir_name" | tr '[:lower:]' '[:upper:]')" 2>/dev/null || true
           done
 
           cd ..
