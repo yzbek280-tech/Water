@@ -20,13 +20,22 @@ jobs:
       - name: Extract Project Zip
         run: |
           unzip -q hack.zip -d extracted_project
-          ls -la extracted_project
+          echo "=== СТРУКТУРА ПРОЕКТУ ==="
+          find extracted_project -maxdepth 3
+          echo "========================"
 
       - name: Compile Library
         run: |
           PROJECT_DIR=$(find extracted_project -type d -name "ImGui" -exec dirname {} \;)
           echo "Проект найден в: $PROJECT_DIR"
           
+          # Створюємо сумісність шляхів нижнього/верхнього регістру
+          if [ -d "$PROJECT_DIR/Includes" ] && [ ! -d "$PROJECT_DIR/includes" ]; then
+            ln -s Includes "$PROJECT_DIR/includes"
+          elif [ -d "$PROJECT_DIR/includes" ] && [ ! -d "$PROJECT_DIR/Includes" ]; then
+            ln -s includes "$PROJECT_DIR/Includes"
+          fi
+
           NDK_PATH=$PWD/android-ndk-r26b
           
           $NDK_PATH/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang++ \
@@ -51,4 +60,3 @@ jobs:
         with:
           name: waterhack-library
           path: libwaterhack.so
-
