@@ -20,20 +20,18 @@ jobs:
       - name: Extract Project Zip
         run: |
           unzip -q hack.zip -d extracted_project
-          echo "=== СТРУКТУРА ПРОЕКТУ ==="
-          find extracted_project -maxdepth 3
-          echo "========================"
 
       - name: Compile Library
         run: |
           PROJECT_DIR=$(find extracted_project -type d -name "ImGui" -exec dirname {} \;)
           echo "Проект найден в: $PROJECT_DIR"
           
-          # Створюємо сумісність шляхів нижнього/верхнього регістру
+          # Автоматичне створення посилань для сумісності регістру папок
           if [ -d "$PROJECT_DIR/Includes" ] && [ ! -d "$PROJECT_DIR/includes" ]; then
             ln -s Includes "$PROJECT_DIR/includes"
-          elif [ -d "$PROJECT_DIR/includes" ] && [ ! -d "$PROJECT_DIR/Includes" ]; then
-            ln -s includes "$PROJECT_DIR/Includes"
+          fi
+          if [ -d "$PROJECT_DIR/ImGui" ] && [ ! -d "$PROJECT_DIR/IMGUI" ]; then
+            ln -s ImGui "$PROJECT_DIR/IMGUI"
           fi
 
           NDK_PATH=$PWD/android-ndk-r26b
@@ -49,6 +47,7 @@ jobs:
             "$PROJECT_DIR/ImGui/backends/imgui_impl_opengl3.cpp" \
             -I"$PROJECT_DIR" \
             -I"$PROJECT_DIR/ImGui" \
+            -I"$PROJECT_DIR/IMGUI" \
             -I"$PROJECT_DIR/Includes" \
             -I"$PROJECT_DIR/includes" \
             -L"$PROJECT_DIR/libraries/arm64-v8a" -ldobby \
