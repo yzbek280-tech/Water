@@ -20,6 +20,9 @@ jobs:
       - name: Extract Project Zip
         run: |
           unzip -q hack.zip -d extracted_project
+          echo "=== ПОВНИЙ СПИСОК ФАЙЛІВ У ПРОЄКТІ ==="
+          find extracted_project -type f
+          echo "====================================="
 
       - name: Compile Library
         run: |
@@ -36,8 +39,8 @@ jobs:
 
           NDK_PATH=$PWD/android-ndk-r26b
           
-          # Автоматично знаходимо всі .cpp файли у проєкті
-          CPP_FILES=$(find "$PROJECT_DIR" -name "*.cpp")
+          # Збираємо абсолютно всі .cpp файли з усього проєкту
+          CPP_FILES=$(find "$extracted_project" -name "*.cpp")
           echo "Знайдені файли для компіляції:"
           echo "$CPP_FILES"
 
@@ -49,6 +52,7 @@ jobs:
             -I"$PROJECT_DIR/IMGUI" \
             -I"$PROJECT_DIR/Includes" \
             -I"$PROJECT_DIR/includes" \
+            -I"$(dirname $(find "$extracted_project" -name "login.cpp" | head -n 1))" \
             -L"$PROJECT_DIR/libraries/arm64-v8a" -ldobby \
             -llog -lGLESv2 -lEGL \
             -o libwaterhack.so
