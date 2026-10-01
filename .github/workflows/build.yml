@@ -20,27 +20,45 @@ jobs:
       - name: Extract Project Zip
         run: |
           unzip -q hack.zip -d extracted_project
-          echo "=== ПОВНИЙ СПИСОК ФАЙЛІВ У ПРОЄКТІ ==="
-          find extracted_project -type f
-          echo "====================================="
 
       - name: Compile Library
         run: |
           NDK_PATH=$PWD/android-ndk-r26b
           
-          # Збираємо абсолютно всі .cpp файли з усього проєкту
+          # Переходимо всередину розпакованого проєкту для зручності
+          cd extracted_project
+
+          # Створюємо символьні посилання для вирішення проблем з регістром папок (великі/маленькі літери)
+          for dir in */; do
+            dir_name=$(basename "$dir")
+            # Створюємо дублікати з усіма варіантами регістру
+            ln -sfn "$dir_name" "$(echo "$dir_name" | tr '[:upper:]' '[:lower:]')"
+            ln -sfn "$dir_name" "$(echo "$dir_name" | tr '[:lower:]' '[:upper:]')"
+          }
+          
+          # Також робимо те ж саме для вкладених папок (наприклад, Dobby всередині includes)
+          find . -type d | while read -r subdirs; do
+            sub_name=$(basename "$subdirs")
+            parent_dir=$(dirname "$subdirs")
+            ln -sfn "$sub_name" "$parent_dir/$(echo "$sub_name" | tr '[:upper:]' '[:lower:]')" 2>/dev/null || true
+            ln -sfn "$sub_name" "$parent_dir/$(echo "$sub_name" | tr '[:lower:]' '[:upper:]')" 2>/dev/null || true
+          done
+
+          cd ..
+
+          # Збираємо всі .cpp файли
           CPP_FILES=$(find extracted_project -name "*.cpp")
           echo "Знайдені файли для компіляції:"
           echo "$CPP_FILES"
 
-          # Збираємо всі підпапки для автоматичного включення заголовків (-I)
+          # Збираємо всі папки для включення заголовків (-I)
           INCLUDE_DIRS=$(find extracted_project -type d)
           INCLUDE_FLAGS=""
           for dir in $INCLUDE_DIRS; do
             INCLUDE_FLAGS="$INCLUDE_FLAGS -I$dir"
           done
 
-          # Шукаємо шлях до бібліотеки dobby, якщо вона є
+          # Шукаємо шлях до бібліотеки dobby
           DOBBY_LIB_DIR=$(find extracted_project -type d -name "arm64-v8a" | head -n 1)
           LDFLAGS=""
           if [ -n "$DOBBY_LIB_DIR" ]; then
