@@ -36,7 +36,7 @@ jobs:
 
           NDK_PATH=$PWD/android-ndk-r26b
           
-          # Збираємо всі .cpp файли автоматично, щоб не губити жодного
+          # Автоматично знаходимо всі .cpp файли у проєкті
           CPP_FILES=$(find "$PROJECT_DIR" -name "*.cpp")
           echo "Знайдені файли для компіляції:"
           echo "$CPP_FILES"
