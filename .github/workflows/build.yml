@@ -36,15 +36,14 @@ jobs:
 
           NDK_PATH=$PWD/android-ndk-r26b
           
+          # Збираємо всі .cpp файли автоматично, щоб не губити жодного
+          CPP_FILES=$(find "$PROJECT_DIR" -name "*.cpp")
+          echo "Знайдені файли для компіляції:"
+          echo "$CPP_FILES"
+
           $NDK_PATH/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang++ \
             -shared -fPIC -std=c++17 \
-            "$PROJECT_DIR/Main.cpp" \
-            "$PROJECT_DIR/ImGui/imgui.cpp" \
-            "$PROJECT_DIR/ImGui/imgui_draw.cpp" \
-            "$PROJECT_DIR/ImGui/imgui_tables.cpp" \
-            "$PROJECT_DIR/ImGui/imgui_widgets.cpp" \
-            "$PROJECT_DIR/ImGui/backends/imgui_impl_android.cpp" \
-            "$PROJECT_DIR/ImGui/backends/imgui_impl_opengl3.cpp" \
+            $CPP_FILES \
             -I"$PROJECT_DIR" \
             -I"$PROJECT_DIR/ImGui" \
             -I"$PROJECT_DIR/IMGUI" \
